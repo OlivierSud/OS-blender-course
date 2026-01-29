@@ -59,7 +59,9 @@
 
     <button id="sidebar-open" class="sidebar-toggle-open">▶</button>
 
-    <script src="courses_data.js"></script>
+    <script>
+        document.write('<script src="courses_data.js?v=' + Date.now() + '"><\/script>');
+    </script>
     <script src="app.js"></script>
     <script src="login.js"></script>
 </body>
