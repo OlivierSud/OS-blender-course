@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O.S. Blender Course - PDF Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box">
+            <h2>Accès Restreint</h2>
+            <p>Veuillez entrer le mot de passe pour accéder au cours.</p>
+            <input type="password" id="password-input" placeholder="Mot de passe">
+            <button id="login-button">Entrer</button>
+            <p id="login-error" class="error-msg" style="display: none;"></p>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="sidebar">
+        <button id="sidebar-close" class="sidebar-toggle-close">×</button>
+        <div class="brand">
+            <span>3D</span> Blender
+        </div>
+        <div class="brand-subtitle">Cours créé par Olivier Sudermann
+        </div>
+
+        <div class="sidebar-scroll">
+            <div class="menu-label">Liste des cours</div>
+
+            <ul id="course-list" class="course-list">
+                <!-- Items are injected here by app.js -->
+            </ul>
+
+            <div class="menu-label" style="margin-top: 2rem;">3D Tips</div>
+
+            <ul id="tips-list" class="course-list">
+                <!-- Items are injected here by app.js -->
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Viewer Area -->
+    <main class="main-content">
+        <div id="empty-state" class="empty-state">
+            <h2>Bienvenue au cours de Blender</h2>
+            <p>Sélectionnez le cours dans le menu de gauche pour commencer.</p>
+        </div>
+
+        <div id="pdf-container" style="display: none;">
+            <iframe id="pdf-viewer" src="" title="PDF Viewer"></iframe>
+        </div>
+    </main>
+
+    <button id="sidebar-open" class="sidebar-toggle-open">▶</button>
+
+    <script src="courses_data.js"></script>
+    <script src="app.js"></script>
+    <script src="login.js"></script>
+</body>
+
+</html>
