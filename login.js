@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Hardcoded simple password
     // To change it, replace 'OS2026' with your desired password
-    const CORRECT_PASSWORD = '123';
+    const CORRECT_PASSWORD = '0000';
 
     // Check if user is already logged in for this session
     if (sessionStorage.getItem('isLoggedIn') === 'true') {

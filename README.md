@@ -11,7 +11,7 @@ Une interface web moderne pour visualiser mes cours et astuces Blender. Ce proje
 -   **Architecture "Static Site"** : Pas de base de données requise, fonctionne avec un simple script Python pour l'indexation.
 -   **Design Premium** : Interface sombre, glassmorphism, et animations fluides.
 -   **Menu Rétractable** : Maximisez l'espace de lecture en masquant la barre latérale.
--   **Protection par Mot de Passe** : Un écran de connexion simple protège l'accès au contenu (Côté client).
+-   **Protection par Mot de Passe** : Un écran de connexion simple protège l'accès au contenu.
 
 ---
 
@@ -30,16 +30,6 @@ Après avoir ajouté ou supprimé des fichiers, le site ne se met pas à jour to
 > **Double-cliquez sur le fichier `update_menu.bat` à la racine du projet.**
 
 Une fenêtre noire va s'ouvrir brièvement pour scanner les dossiers et mettre à jour le fichier `courses_data.js`. Une fois fermée, rafraîchissez votre page web pour voir les changements.
-
----
-
-## ⚙️ Configuration
-
-### Changer le Mot de Passe
-La sécurité est gérée dans le fichier `login.js`. Pour changer le mot de passe :
-1.  Ouvrez `login.js` avec un éditeur de texte.
-2.  Modifiez la ligne : `const CORRECT_PASSWORD = '123';`
-3.  Remplacez `123` par le mot de passe de votre choix.
 
 ---
 
