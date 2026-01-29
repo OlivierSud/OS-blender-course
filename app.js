@@ -95,11 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.COURSE_DATA) {
             // Render Courses
             const courseData = window.COURSE_DATA.courses || window.COURSE_DATA; // Fallback for old format
+            courseListContainer.innerHTML = '';
             renderMenu(courseData, courseListContainer);
 
             // Render Tips
             const tipsListContainer = document.getElementById('tips-list');
             if (window.COURSE_DATA.tips && tipsListContainer) {
+                tipsListContainer.innerHTML = '';
                 renderMenu(window.COURSE_DATA.tips, tipsListContainer);
             }
         } else {
