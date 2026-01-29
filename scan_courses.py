@@ -74,19 +74,32 @@ def generate_js_file():
         "tips": []
     }
 
+    # Helper to find directory case-insensitively
+    def find_dir(name):
+        for d in os.listdir('.'):
+            if os.path.isdir(d) and d.lower() == name.lower():
+                return d
+        return None
+
     # Scan 'Cours'
-    if os.path.exists('Cours'):
-        print("Scanning 'Cours'...")
-        data['courses'] = scan_directory('Cours')
+    cours_dir = find_dir('cours')
+    if cours_dir:
+        print(f"Scanning '{cours_dir}'...")
+        data['courses'] = scan_directory(cours_dir)
     else:
         print("Warning: 'Cours' directory not found.")
 
     # Scan 'Tips'
-    if os.path.exists('Tips'):
-        print("Scanning 'Tips'...")
-        data['tips'] = scan_directory('Tips')
+    tips_dir = find_dir('tips')
+    if tips_dir:
+        print(f"Scanning '{tips_dir}'...")
+        data['tips'] = scan_directory(tips_dir)
     else:
         print("Warning: 'Tips' directory not found.")
+    
+    # Add generation timestamp
+    from datetime import datetime
+    data['generatedAt'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Wrap in a global variable definition
     js_content = f"window.COURSE_DATA = {json.dumps(data, indent=4)};"

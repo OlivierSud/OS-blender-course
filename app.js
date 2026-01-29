@@ -93,6 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Menu - Wait for Login
     document.addEventListener('login-success', () => {
         if (window.COURSE_DATA) {
+            console.log("Course Data Loaded. Generated at:", window.COURSE_DATA.generatedAt);
+
             // Render Courses
             const courseData = window.COURSE_DATA.courses || window.COURSE_DATA; // Fallback for old format
             courseListContainer.innerHTML = '';
