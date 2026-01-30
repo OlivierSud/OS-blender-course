@@ -13,11 +13,23 @@
     <!-- Login Overlay -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-box">
-            <h2>Accès Restreint</h2>
-            <p>Veuillez entrer le mot de passe pour accéder au cours.</p>
-            <input type="password" id="password-input" placeholder="Mot de passe">
-            <button id="login-button">Entrer</button>
-            <p id="login-error" class="error-msg" style="display: none;"></p>
+            <h2 id="login-title">Sélectionnez votre classe</h2>
+            <p id="login-subtitle">Choisissez votre classe pour accéder aux cours.</p>
+
+            <!-- Class selection buttons (initially visible) -->
+            <div id="class-selection">
+                <!-- Buttons will be dynamically generated from courses_data.js -->
+            </div>
+
+            <!-- Password input (initially hidden) -->
+            <div id="password-section" style="display: none;">
+                <p id="selected-class-label" style="margin-bottom: 1rem; color: var(--accent-color); font-weight: 600;">
+                </p>
+                <input type="password" id="password-input" placeholder="Mot de passe">
+                <button id="login-button">Entrer</button>
+                <button id="back-button" class="secondary-button">Retour</button>
+                <p id="login-error" class="error-msg" style="display: none;"></p>
+            </div>
         </div>
     </div>
 
@@ -42,6 +54,11 @@
             <ul id="tips-list" class="course-list">
                 <!-- Items are injected here by app.js -->
             </ul>
+
+            <!-- Logout/Switch Class Button -->
+            <button id="switch-class-btn" class="switch-class-button" style="display: none;">
+                Changer de classe
+            </button>
         </div>
     </nav>
 

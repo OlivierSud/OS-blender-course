@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!items || items.length === 0) return;
 
         items.forEach(item => {
+            // Check visibility (explicitly false means hidden, default true)
+            if (item.visibility === false) return;
+
             const li = document.createElement('li');
             li.classList.add('course-item');
 
@@ -96,7 +99,36 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Course Data Loaded. Generated at:", window.COURSE_DATA.generatedAt);
 
             // Render Courses
-            const courseData = window.COURSE_DATA.courses || window.COURSE_DATA; // Fallback for old format
+            let courseData = window.COURSE_DATA.courses || window.COURSE_DATA; // Fallback for old format
+
+            // Handle Group filtering - prioritize sessionStorage (from login), then URL parameters
+            let groupName = sessionStorage.getItem('selectedGroup');
+
+            // If no session group, check URL parameters
+            if (!groupName) {
+                const urlParams = new URLSearchParams(window.location.search);
+                groupName = urlParams.get('group');
+            }
+
+            if (groupName) {
+                // Find the specific folder
+                const groupFolder = courseData.find(item => item.name === groupName && item.type === 'folder');
+
+                if (groupFolder) {
+                    // Update header/title to reflect current view
+                    const brandSubtitle = document.querySelector('.brand-subtitle');
+                    if (brandSubtitle) {
+                        brandSubtitle.textContent = `Cours : ${groupName}`;
+                    }
+
+                    // Render ONLY the children of this group
+                    courseData = groupFolder.children;
+                    console.log(`Filtering view for group: ${groupName}`);
+                } else {
+                    console.warn(`Group "${groupName}" not found. Showing all courses.`);
+                }
+            }
+
             courseListContainer.innerHTML = '';
             renderMenu(courseData, courseListContainer);
 
@@ -105,6 +137,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.COURSE_DATA.tips && tipsListContainer) {
                 tipsListContainer.innerHTML = '';
                 renderMenu(window.COURSE_DATA.tips, tipsListContainer);
+            }
+
+            // Show switch class button
+            const switchClassBtn = document.getElementById('switch-class-btn');
+            if (switchClassBtn) {
+                switchClassBtn.style.display = 'block';
             }
         } else {
             courseListContainer.innerHTML = '<li style="padding:1rem; color:red;">Erreur: Données introuvables. Lancez scan_courses.py</li>';

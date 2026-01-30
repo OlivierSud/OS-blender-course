@@ -230,10 +230,6 @@ iframe {
     margin-bottom: 0.5rem;
 }
 
-padding: 2rem 0;
-/* Remove horizontal padding from main sidebar, move to scroll container or children */
-display: flex;
-
 /* Brand Styling with Accent */
 .brand {
     font-size: 1.5rem;
@@ -510,6 +506,97 @@ iframe {
     margin-top: 1rem;
     font-size: 0.85rem;
 }
+
+/* Class Selection Buttons */
+#class-selection {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: center;
+}
+
+.class-button {
+    padding: 1.2rem 1rem;
+    background: rgba(255, 116, 23, 0.1);
+    border: 2px solid rgba(255, 116, 23, 0.3);
+    border-radius: 12px;
+    color: var(--accent-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.class-button:hover {
+    background: rgba(255, 116, 23, 0.2);
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 116, 23, 0.3);
+}
+
+.class-button:active {
+    transform: translateY(0);
+}
+
+/* Secondary Button (Back button) */
+.secondary-button {
+    width: 100%;
+    padding: 0.8rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 0.5rem;
+}
+
+.secondary-button:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--text-primary);
+}
+
+#password-section {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Switch Class Button */
+.switch-class-button {
+    width: 100%;
+    padding: 0.8rem;
+    margin-top: 2rem;
+    background: transparent;
+    border: 1px solid rgba(255, 116, 23, 0.3);
+    border-radius: 8px;
+    color: var(--accent-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.switch-class-button:hover {
+    background: rgba(255, 116, 23, 0.1);
+    border-color: var(--accent-color);
+}
+
 
 /* Sidebar Toggle Styles */
 .sidebar {
