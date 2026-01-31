@@ -164,15 +164,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const mobileContainer = document.getElementById('mobile-pdf-container');
         mobileContainer.style.display = 'flex';
 
+        const loader = document.getElementById('pdf-loader');
+        if (loader) loader.style.display = 'flex';
+        canvas.style.opacity = '0'; // Hide canvas during initial fetch
+
         try {
             const loadingTask = pdfjsLib.getDocument(path);
             pdfDoc = await loadingTask.promise;
             document.getElementById('page-count').textContent = pdfDoc.numPages;
 
             pageNum = 1;
-            renderPage(pageNum);
+            await renderPage(pageNum);
         } catch (error) {
             console.error('Error loading PDF with PDF.js:', error);
+            if (loader) loader.style.display = 'none';
             alert('Erreur lors du chargement du PDF sur mobile.');
         }
     }
