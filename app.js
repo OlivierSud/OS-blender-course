@@ -108,6 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPage(num) {
         pageRendering = true;
+        const loader = document.getElementById('pdf-loader');
+        if (loader) loader.style.display = 'flex';
+        canvas.style.opacity = '0.3'; // Dim canvas during render
+
         const page = await pdfDoc.getPage(num);
 
         const wrapper = document.getElementById('pdf-canvas-wrapper');
@@ -133,6 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await renderTask.promise;
         pageRendering = false;
+
+        if (loader) loader.style.display = 'none';
+        canvas.style.opacity = '1';
+
         if (pageNumPending !== null) {
             renderPage(pageNumPending);
             pageNumPending = null;
