@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const CLASS_PASSWORDS = {
         '3D1': '3D1',
         '3D2': '3D2',
-        'DA3': 'DA3'
+        'DA3': 'DA3',
+        'Prof': 'Prof'
     };
 
     let selectedClass = null;
@@ -52,6 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
             button.addEventListener('click', () => selectClass(folder.name));
             classSelection.appendChild(button);
         });
+
+        // Add "Prof" button
+        const profButton = document.createElement('button');
+        profButton.className = 'class-button prof-button';
+        profButton.textContent = 'Professeur';
+        profButton.addEventListener('click', () => selectClass('Prof'));
+        classSelection.appendChild(profButton);
     }
 
     function selectClass(className) {

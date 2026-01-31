@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>O.S. Blender Course - PDF Viewer</title>
     <link rel="stylesheet" href="style.css">
+    <!-- PDF.js for Mobile Compatibility -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Set worker path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 </head>
 
 <body>
@@ -71,6 +77,18 @@
 
         <div id="pdf-container" style="display: none;">
             <iframe id="pdf-viewer" src="" title="PDF Viewer"></iframe>
+        </div>
+
+        <!-- Mobile-Specific PDF.js Viewer -->
+        <div id="mobile-pdf-container" style="display: none;">
+            <div id="mobile-viewer-controls">
+                <button id="prev-page">Page Précédente</button>
+                <span id="page-info">Page <span id="page-num">0</span> / <span id="page-count">0</span></span>
+                <button id="next-page">Page Suivante</button>
+            </div>
+            <div id="pdf-canvas-wrapper">
+                <canvas id="pdf-canvas"></canvas>
+            </div>
         </div>
     </main>
 

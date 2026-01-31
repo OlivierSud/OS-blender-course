@@ -93,6 +93,88 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // PDF.js State for Mobile
+    let pdfDoc = null;
+    let pageNum = 1;
+    let pageRendering = false;
+    let pageNumPending = null;
+    const scale = window.devicePixelRatio || 1; // High DPI support
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+
+    function isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    }
+
+    async function renderPage(num) {
+        pageRendering = true;
+        const page = await pdfDoc.getPage(num);
+
+        const viewport = page.getViewport({ scale: 2 }); // Render at higher scale for clarity
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // Ensure canvas fits container
+        canvas.style.width = '100%';
+        canvas.style.height = 'auto';
+
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: viewport
+        };
+        const renderTask = page.render(renderContext);
+
+        await renderTask.promise;
+        pageRendering = false;
+        if (pageNumPending !== null) {
+            renderPage(pageNumPending);
+            pageNumPending = null;
+        }
+
+        // Update UI
+        document.getElementById('page-num').textContent = num;
+    }
+
+    function queueRenderPage(num) {
+        if (pageRendering) {
+            pageNumPending = num;
+        } else {
+            renderPage(num);
+        }
+    }
+
+    async function loadPDFMobile(path) {
+        emptyState.style.display = 'none';
+        pdfContainer.style.display = 'none';
+        const mobileContainer = document.getElementById('mobile-pdf-container');
+        mobileContainer.style.display = 'flex';
+
+        try {
+            const loadingTask = pdfjsLib.getDocument(path);
+            pdfDoc = await loadingTask.promise;
+            document.getElementById('page-count').textContent = pdfDoc.numPages;
+
+            pageNum = 1;
+            renderPage(pageNum);
+        } catch (error) {
+            console.error('Error loading PDF with PDF.js:', error);
+            alert('Erreur lors du chargement du PDF sur mobile.');
+        }
+    }
+
+    // Controls for Mobile Viewer
+    document.getElementById('prev-page')?.addEventListener('click', () => {
+        if (pageNum <= 1) return;
+        pageNum--;
+        queueRenderPage(pageNum);
+    });
+
+    document.getElementById('next-page')?.addEventListener('click', () => {
+        if (pageNum >= pdfDoc.numPages) return;
+        pageNum++;
+        queueRenderPage(pageNum);
+    });
+
     // Initialize Menu - Wait for Login
     document.addEventListener('login-success', () => {
         if (window.COURSE_DATA) {
@@ -111,32 +193,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (groupName) {
-                // Find the specific folder
-                const groupFolder = courseData.find(item => item.name === groupName && item.type === 'folder');
-
-                if (groupFolder) {
-                    // Update header/title to reflect current view
+                // Special case for "Prof" mode - show all courses
+                if (groupName === 'Prof') {
                     const brandSubtitle = document.querySelector('.brand-subtitle');
                     if (brandSubtitle) {
-                        brandSubtitle.textContent = `Cours : ${groupName}`;
+                        brandSubtitle.textContent = 'Mode Professeur - Tous les cours';
                     }
-
-                    // Render ONLY the children of this group
-                    courseData = groupFolder.children;
-                    console.log(`Filtering view for group: ${groupName}`);
+                    console.log('Prof mode: Showing all courses');
                 } else {
-                    console.warn(`Group "${groupName}" not found. Showing all courses.`);
+                    // Find the specific folder
+                    const groupFolder = courseData.find(item => item.name === groupName && item.type === 'folder');
+
+                    if (groupFolder) {
+                        // Update header/title to reflect current view
+                        const brandSubtitle = document.querySelector('.brand-subtitle');
+                        if (brandSubtitle) {
+                            brandSubtitle.textContent = `Cours : ${groupName}`;
+                        }
+
+                        // Render ONLY the children of this group
+                        courseData = groupFolder.children;
+                        console.log(`Filtering view for group: ${groupName}`);
+                    } else {
+                        console.warn(`Group "${groupName}" not found. Showing all courses.`);
+                    }
                 }
             }
 
             courseListContainer.innerHTML = '';
             renderMenu(courseData, courseListContainer);
 
+            // Override click behavior for mobile integration
+            document.querySelectorAll('.course-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (isMobile()) {
+                        e.stopPropagation(); // Stop the default listener (mostly for visual active state)
+                        const pdfPath = link.getAttribute('data-src');
+                        if (pdfPath) {
+                            loadPDFMobile(pdfPath);
+                        }
+                    }
+                });
+            });
+
             // Render Tips
             const tipsListContainer = document.getElementById('tips-list');
             if (window.COURSE_DATA.tips && tipsListContainer) {
                 tipsListContainer.innerHTML = '';
                 renderMenu(window.COURSE_DATA.tips, tipsListContainer);
+
+                // Also override tips links for mobile
+                tipsListContainer.querySelectorAll('.course-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        if (isMobile()) {
+                            const pdfPath = link.getAttribute('data-src');
+                            if (pdfPath) loadPDFMobile(pdfPath);
+                        }
+                    });
+                });
             }
 
             // Show switch class button
