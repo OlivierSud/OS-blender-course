@@ -151,7 +151,21 @@ def generate_js_file():
     cours_dir = find_dir('cours')
     if cours_dir:
         print(f"Scanning '{cours_dir}'...")
-        data['courses'] = scan_directory(cours_dir, visibility_map)
+        
+        folders = os.listdir(cours_dir)
+        year_folders = [f for f in folders if os.path.isdir(os.path.join(cours_dir, f)) and re.match(r'^\d{4}$', f)]
+        
+        if year_folders:
+            # Year-based structure
+            courses_by_year = {}
+            for year in sorted(year_folders, reverse=True):
+                print(f"  Scanning year: {year}")
+                year_path = os.path.join(cours_dir, year)
+                courses_by_year[year] = scan_directory(year_path, visibility_map)
+            data['courses'] = courses_by_year
+        else:
+            # Legacy/Flat structure (fallback)
+            data['courses'] = scan_directory(cours_dir, visibility_map)
     else:
         print("Warning: 'Cours' directory not found.")
 

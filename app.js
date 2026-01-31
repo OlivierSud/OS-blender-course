@@ -180,78 +180,104 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.COURSE_DATA) {
             console.log("Course Data Loaded. Generated at:", window.COURSE_DATA.generatedAt);
 
-            // Render Courses
-            let courseData = window.COURSE_DATA.courses || window.COURSE_DATA; // Fallback for old format
+            // Handle Data Structure (Object for years, or fallback Array for legacy)
+            let rawCourses = window.COURSE_DATA.courses || window.COURSE_DATA;
+            let courseData = [];
 
             // Handle Group filtering - prioritize sessionStorage (from login), then URL parameters
             let groupName = sessionStorage.getItem('selectedGroup');
-
-            // If no session group, check URL parameters
             if (!groupName) {
                 const urlParams = new URLSearchParams(window.location.search);
                 groupName = urlParams.get('group');
             }
 
-            if (groupName) {
-                // Special case for "Prof" mode - show all courses
-                if (groupName === 'Prof') {
-                    const brandSubtitle = document.querySelector('.brand-subtitle');
-                    if (brandSubtitle) {
-                        brandSubtitle.textContent = 'Mode Professeur - Tous les cours';
-                    }
-                    console.log('Prof mode: Showing all courses');
+            if (groupName === 'Prof') {
+                // PROF MODE: Show everything, grouped by year folders
+                const brandSubtitle = document.querySelector('.brand-subtitle');
+                if (brandSubtitle) brandSubtitle.textContent = 'Mode Professeur - Archives Complètes';
+
+                if (typeof rawCourses === 'object' && !Array.isArray(rawCourses)) {
+                    // Convert years object to folder structure
+                    const years = Object.keys(rawCourses).sort((a, b) => b - a); // Newest first
+                    courseData = years.map(year => ({
+                        type: 'folder',
+                        name: `Année ${year}`,
+                        children: rawCourses[year],
+                        visibility: true
+                    }));
                 } else {
-                    // Find the specific folder
-                    const groupFolder = courseData.find(item => item.name === groupName && item.type === 'folder');
-
-                    if (groupFolder) {
-                        // Update header/title to reflect current view
-                        const brandSubtitle = document.querySelector('.brand-subtitle');
-                        if (brandSubtitle) {
-                            brandSubtitle.textContent = `Cours : ${groupName}`;
-                        }
-
-                        // Render ONLY the children of this group
-                        courseData = groupFolder.children;
-                        console.log(`Filtering view for group: ${groupName}`);
-                    } else {
-                        console.warn(`Group "${groupName}" not found. Showing all courses.`);
-                    }
+                    courseData = rawCourses; // Legacy fallback
                 }
+            } else if (groupName) {
+                // STUDENT MODE: Show only latest year for specific class
+                if (typeof rawCourses === 'object' && !Array.isArray(rawCourses)) {
+                    const sortedYears = Object.keys(rawCourses).sort((a, b) => b - a);
+                    if (sortedYears.length > 0) {
+                        const latestYear = sortedYears[0];
+                        const brandSubtitle = document.querySelector('.brand-subtitle');
+                        if (brandSubtitle) brandSubtitle.textContent = `Cours ${groupName} - ${latestYear}`;
+
+                        const groupFolder = rawCourses[latestYear].find(item => item.name === groupName && item.type === 'folder');
+                        if (groupFolder) {
+                            courseData = groupFolder.children;
+                        } else {
+                            console.warn(`Classe "${groupName}" non trouvée en ${latestYear}`);
+                        }
+                    }
+                } else {
+                    // Legacy fallback filtering
+                    const groupFolder = rawCourses.find(item => item.name === groupName && item.type === 'folder');
+                    if (groupFolder) courseData = groupFolder.children;
+                }
+            } else {
+                courseData = Array.isArray(rawCourses) ? rawCourses : [];
             }
 
+            // Centralized click handling
+            const handleLinkClick = (link, e) => {
+                const pdfPath = link.getAttribute('data-src');
+                if (!pdfPath) return;
+
+                // Visual active state handling
+                document.querySelectorAll('.course-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                // Load content
+                if (isMobile() && pdfPath.toLowerCase().endsWith('.pdf')) {
+                    // Use PDF.js for mobile PDFs
+                    loadPDFMobile(pdfPath);
+                } else {
+                    // Use standard iframe for everything else (desktop, or mobile non-PDF)
+                    viewer.src = pdfPath;
+                    emptyState.style.display = 'none';
+                    pdfContainer.style.display = 'block';
+                    document.getElementById('mobile-pdf-container').style.display = 'none';
+                }
+            };
+
+            // Initialize Course Menu
             courseListContainer.innerHTML = '';
             renderMenu(courseData, courseListContainer);
 
-            // Override click behavior for mobile integration
-            document.querySelectorAll('.course-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    if (isMobile()) {
-                        e.stopPropagation(); // Stop the default listener (mostly for visual active state)
-                        const pdfPath = link.getAttribute('data-src');
-                        if (pdfPath) {
-                            loadPDFMobile(pdfPath);
-                        }
-                    }
-                });
-            });
-
-            // Render Tips
+            // Initialize Tips Menu
             const tipsListContainer = document.getElementById('tips-list');
             if (window.COURSE_DATA.tips && tipsListContainer) {
                 tipsListContainer.innerHTML = '';
                 renderMenu(window.COURSE_DATA.tips, tipsListContainer);
-
-                // Also override tips links for mobile
-                tipsListContainer.querySelectorAll('.course-link').forEach(link => {
-                    link.addEventListener('click', (e) => {
-                        if (isMobile()) {
-                            const pdfPath = link.getAttribute('data-src');
-                            if (pdfPath) loadPDFMobile(pdfPath);
-                        }
-                    });
-                });
             }
+
+            // Apply global listener and override renderMenu's inline logic if needed
+            // Actually, let's just use the shared logic for all .course-link
+            document.querySelectorAll('.course-link').forEach(link => {
+                // Remove the one added in renderMenu and use our new one
+                const newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+
+                newLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    handleLinkClick(newLink, e);
+                });
+            });
 
             // Show switch class button
             const switchClassBtn = document.getElementById('switch-class-btn');

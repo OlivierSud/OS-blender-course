@@ -43,10 +43,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateClassButtons() {
         classSelection.innerHTML = '';
 
-        // Get all course folders
-        const courseFolders = window.COURSE_DATA.courses.filter(item => item.type === 'folder');
+        let rawCourses = window.COURSE_DATA.courses;
+        let classes = [];
 
-        courseFolders.forEach(folder => {
+        if (Array.isArray(rawCourses)) {
+            // Legacy flat structure
+            classes = rawCourses.filter(item => item.type === 'folder');
+        } else if (typeof rawCourses === 'object') {
+            // New year-based structure: Get classes from the latest year
+            const years = Object.keys(rawCourses).sort((a, b) => b - a);
+            if (years.length > 0) {
+                const latestYear = years[0];
+                classes = rawCourses[latestYear].filter(item => item.type === 'folder');
+                console.log(`Login: Loading classes from latest year: ${latestYear}`);
+            }
+        }
+
+        classes.forEach(folder => {
             const button = document.createElement('button');
             button.className = 'class-button';
             button.textContent = folder.name;
