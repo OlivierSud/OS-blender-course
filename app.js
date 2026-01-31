@@ -110,13 +110,20 @@ document.addEventListener('DOMContentLoaded', () => {
         pageRendering = true;
         const page = await pdfDoc.getPage(num);
 
-        const viewport = page.getViewport({ scale: 2 }); // Render at higher scale for clarity
+        const wrapper = document.getElementById('pdf-canvas-wrapper');
+        const containerWidth = wrapper.clientWidth - 20; // Some margin
+
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        const fitScale = containerWidth / unscaledViewport.width;
+
+        // Render at 2x the fit scale for high resolution
+        const viewport = page.getViewport({ scale: fitScale * 2 });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
-        // Ensure canvas fits container
-        canvas.style.width = '100%';
-        canvas.style.height = 'auto';
+        // Visual display size (CSS)
+        canvas.style.width = `${containerWidth}px`;
+        canvas.style.height = 'auto'; // Maintain aspect ratio
 
         const renderContext = {
             canvasContext: ctx,
@@ -162,15 +169,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Swipe Navigation for Mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    const mobilePdfContainer = document.getElementById('mobile-pdf-container');
+    if (mobilePdfContainer) {
+        mobilePdfContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        mobilePdfContainer.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+    }
+
+    function handleSwipe() {
+        const threshold = 50; // Minimum swipe distance
+        const delta = touchEndX - touchStartX;
+
+        if (Math.abs(delta) > threshold) {
+            if (delta < 0) {
+                // Swipe Left -> Next Page
+                if (pdfDoc && pageNum < pdfDoc.numPages) {
+                    pageNum++;
+                    queueRenderPage(pageNum);
+                }
+            } else {
+                // Swipe Right -> Previous Page
+                if (pdfDoc && pageNum > 1) {
+                    pageNum--;
+                    queueRenderPage(pageNum);
+                }
+            }
+        }
+    }
+
     // Controls for Mobile Viewer
     document.getElementById('prev-page')?.addEventListener('click', () => {
-        if (pageNum <= 1) return;
+        if (!pdfDoc || pageNum <= 1) return;
         pageNum--;
         queueRenderPage(pageNum);
     });
 
     document.getElementById('next-page')?.addEventListener('click', () => {
-        if (pageNum >= pdfDoc.numPages) return;
+        if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
         pageNum++;
         queueRenderPage(pageNum);
     });
