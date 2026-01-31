@@ -673,6 +673,8 @@ iframe {
     height: auto !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     background: white;
+    display: block;
+    margin: 0 auto;
 }
 
 /* Sidebar Toggle Styles */
