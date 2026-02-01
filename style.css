@@ -735,3 +735,65 @@ iframe {
     pointer-events: auto;
     left: 0;
 }
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100vw;
+        border-right: none;
+        padding-top: 4rem;
+        /* More space for the close button on mobile */
+    }
+
+    .sidebar.closed {
+        margin-left: -100vw;
+    }
+
+    .brand {
+        font-size: 1.3rem;
+        padding: 0 1.5rem;
+    }
+
+    .brand-subtitle {
+        font-size: 0.8rem;
+        padding: 0 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .sidebar-scroll {
+        padding: 0 1.5rem;
+    }
+
+    .menu-label {
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+    }
+
+    .course-link {
+        font-size: 0.85rem;
+        padding: 0.8rem 0.5rem;
+        /* Slightly larger hit area for fingers */
+    }
+
+    .sidebar-footer {
+        padding: 1rem 1.5rem 1rem 1.5rem;
+        font-size: 0.75rem;
+        /* Actually a tiny bit larger for readability */
+    }
+
+    .sidebar-toggle-close {
+        top: 1.5rem;
+        right: 1.5rem;
+        width: 40px;
+        height: 40px;
+        font-size: 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        /* Better visibility */
+    }
+
+    .sidebar-toggle-open {
+        padding: 1.5rem 0.8rem;
+        font-size: 1.2rem;
+        border-radius: 0 16px 16px 0;
+    }
+}
