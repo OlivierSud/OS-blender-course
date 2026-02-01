@@ -35,7 +35,8 @@ body {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-right: var(--glass-border);
-    padding: 2rem 0;
+    padding: 2rem 0 0.5rem 0;
+    /* Reduced bottom padding */
     /* Remove horizontal padding from main sidebar, move to scroll container or children */
     display: flex;
     flex-direction: column;
@@ -69,6 +70,29 @@ body {
     overflow-y: auto;
     padding: 0 2rem;
     /* Restore padding for the scrollable area */
+}
+
+.sidebar-footer {
+    padding: 1rem 2rem 0.5rem 2rem;
+    /* No bottom padding here */
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    text-align: left;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: auto;
+    font-weight: 300;
+}
+
+.sidebar-footer a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.sidebar-footer a:hover {
+    opacity: 1;
+    color: var(--accent-color);
 }
 
 /* Custom Scrollbar for sidebar container */
