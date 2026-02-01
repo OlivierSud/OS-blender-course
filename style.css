@@ -736,6 +736,21 @@ iframe {
     opacity: 1;
     pointer-events: auto;
     left: 0;
+    animation: slideFromTop 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideFromTop {
+    from {
+        top: 0;
+        opacity: 0.5;
+        transform: translateY(0);
+    }
+
+    to {
+        top: 20%;
+        opacity: 1;
+        transform: translateY(-50%);
+    }
 }
 
 /* Mobile Responsive Adjustments */
