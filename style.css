@@ -815,4 +815,16 @@ iframe {
         font-size: 1.2rem;
         border-radius: 0 16px 16px 0;
     }
+
+    /* Login Box Centering */
+    .login-box {
+        padding: 2rem 1.5rem;
+        width: 90%;
+        margin: 0 auto;
+    }
+
+    #class-selection {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
 }
