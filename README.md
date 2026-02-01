@@ -4,14 +4,14 @@ Une interface web moderne pour visualiser mes cours et astuces Blender. Ce proje
 
 ## 🚀 Fonctionnalités Clés
 
--   **Visionneuse PDF intégrée** : Lecture fluide des cours directement dans le navigateur.
--   **Menu Dynamique** : Le menu latéral est généré automatiquement basé sur l'arborescence des dossiers.
+-   **Optimisé pour Mobile** : Interface adaptative (Responsive) avec menu plein écran et navigation tactile.
+-   **Visionneuse PDF Hybride** : Utilise l'iframe native sur desktop et **PDF.js** sur mobile pour une compatibilité maximale et des fonctions de swipe.
+-   **Menu Dynamique & Intelligent** : Généré automatiquement, il filtre les cours selon la classe sélectionnée.
+-   **Système de Connexion Sécurisé** : Sélection de classe (3D1, 3D2, DA3) avec mots de passe distincts et mode "Professeur" pour accéder aux archives complètes.
 -   **Section "3D Tips"** : Une section dédiée pour les astuces, séparée des cours principaux.
--   **Support des Projets HTML** : Possibilité d'inclure des démos web interactives (dossiers avec `index.html`) qui s'ouvrent directement dans la visionneuse.
 -   **Architecture "Static Site"** : Pas de base de données requise, fonctionne avec un simple script Python pour l'indexation.
--   **Design Premium** : Interface sombre, glassmorphism, et animations fluides.
+-   **Design Premium** : Interface sombre, glassmorphism, et animations fluides (slide-in menu toggle).
 -   **Menu Rétractable** : Maximisez l'espace de lecture en masquant la barre latérale.
--   **Protection par Mot de Passe** : Un écran de connexion simple protège l'accès au contenu.
 
 ---
 
