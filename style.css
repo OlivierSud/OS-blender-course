@@ -42,6 +42,8 @@ body {
     flex-direction: column;
     box-shadow: var(--glass-shadow);
     z-index: 10;
+    flex-shrink: 0;
+    /* Prevents sidebar from squishing when content loads */
 }
 
 .brand {
@@ -740,6 +742,8 @@ iframe {
 @media (max-width: 768px) {
     .sidebar {
         width: 100vw;
+        min-width: 100vw;
+        /* Enforce full width even if content tries to push it */
         border-right: none;
         padding-top: 4rem;
         /* More space for the close button on mobile */
