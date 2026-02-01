@@ -817,10 +817,23 @@ iframe {
     }
 
     /* Login Box Centering */
+    .login-overlay {
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
     .login-box {
         padding: 2rem 1.5rem;
         width: 90%;
-        margin: 0 auto;
+        max-width: 400px;
+        margin: 0;
+        /* Let flexbox handle centering */
+        box-sizing: border-box;
     }
 
     #class-selection {
