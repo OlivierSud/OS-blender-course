@@ -18,6 +18,13 @@
     box-sizing: border-box;
 }
 
+html,
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
@@ -825,6 +832,8 @@ iframe {
         display: flex;
         justify-content: center;
         align-items: center;
+        overflow: hidden;
+        /* Prevent any internal content from triggering scroll */
     }
 
     .login-box {
