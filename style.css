@@ -114,28 +114,109 @@ body {
     margin-bottom: 0.25rem;
 }
 
+.course-item-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-right: 0.5rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.course-item-container:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .course-link {
+    flex: 1;
     display: block;
     padding: 0.6rem 0.5rem;
-    border-radius: 6px;
+    border-radius: 6px 0 0 6px;
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.9rem;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .course-link:hover {
-    background: rgba(255, 255, 255, 0.05);
+    /* Background is handled by container hover now */
     color: var(--text-primary);
     padding-left: 0.75rem;
 }
 
 .course-link.active {
-    background: rgba(231, 136, 92, 0.1);
+    background: rgba(255, 81, 1, 0.5);
     color: var(--accent-color);
     border-left: 3px solid var(--accent-color);
     padding-left: 0.75rem;
+}
+
+.course-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    opacity: 0.4;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+}
+
+.course-item-container:hover .course-action-btn {
+    opacity: 0.8;
+}
+
+.course-action-btn:hover {
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+/* Loading Animation for Course Items */
+.course-item-container.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.course-item-container.loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background: rgba(255, 116, 23, 0.4);
+    /* More visible orange */
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: fill-loading 0.5s ease-out forwards;
+}
+
+@keyframes fill-loading {
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.course-item-container.success {
+    background: rgba(76, 175, 80, 0.1) !important;
+    transition: background 0.5s ease;
+}
+
+.course-item-container.error {
+    background: rgba(244, 67, 54, 0.1) !important;
+    transition: background 0.5s ease;
 }
 
 /* Folder / Submenu Styling */

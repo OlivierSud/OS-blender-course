@@ -64,7 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderMenu(item.children, submenu);
 
             } else if (item.type === 'file') {
-                // File link logic
+                // File link logic wrapper
+                const itemContainer = document.createElement('div');
+                itemContainer.classList.add('course-item-container');
+
                 const link = document.createElement('a');
                 link.href = '#'; // Prevent default nav
                 link.classList.add('course-link');
@@ -73,21 +76,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-
-                    // Visual active state handling
-                    document.querySelectorAll('.course-link').forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-
-                    // Load PDF
-                    const pdfPath = link.getAttribute('data-src');
-                    if (pdfPath) {
-                        viewer.src = pdfPath;
-                        emptyState.style.display = 'none';
-                        pdfContainer.style.display = 'block';
-                    }
+                    // This click is handled by the global listener at the end of DOMContentLoaded
                 });
 
-                li.appendChild(link);
+                itemContainer.appendChild(link);
+
+                // Action Icon (Download or Share)
+                const actionBtn = document.createElement('a');
+                actionBtn.classList.add('course-action-btn');
+
+                const isPDF = item.path.toLowerCase().endsWith('.pdf');
+
+                if (isPDF) {
+                    actionBtn.innerHTML = '⤓';
+                    actionBtn.title = 'Télécharger le PDF';
+                    actionBtn.href = item.path; // Set default href for right-click/fallback
+
+                    actionBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        itemContainer.classList.add('loading');
+                        actionBtn.style.pointerEvents = 'none';
+                        const startTime = Date.now();
+
+                        try {
+                            const response = await fetch(item.path);
+                            if (!response.ok) throw new Error('Network response was not ok');
+
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = item.name;
+                            document.body.appendChild(a);
+                            a.click();
+
+                            // Ensure animation is seen (at least 600ms)
+                            const elapsedTime = Date.now() - startTime;
+                            const remainingTime = Math.max(0, 600 - elapsedTime);
+
+                            setTimeout(() => {
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+
+                                itemContainer.classList.remove('loading');
+                                itemContainer.classList.add('success');
+                                setTimeout(() => {
+                                    itemContainer.classList.remove('success');
+                                    actionBtn.style.pointerEvents = 'auto';
+                                }, 2000);
+                            }, remainingTime);
+
+                        } catch (err) {
+                            console.error('Erreur lors du téléchargement forcé :', err);
+                            itemContainer.classList.remove('loading');
+                            itemContainer.classList.add('error');
+
+                            setTimeout(() => {
+                                itemContainer.classList.remove('error');
+                                actionBtn.style.pointerEvents = 'auto';
+                                // Try standard download as fallback
+                                const a = document.createElement('a');
+                                a.href = item.path;
+                                a.download = item.name;
+                                a.target = '_blank';
+                                a.click();
+                            }, 1500);
+                        }
+                    });
+                } else {
+                    actionBtn.innerHTML = '🔗'; // Share icon
+                    actionBtn.title = 'Copier le lien direct';
+                    actionBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Get absolute URL of the file
+                        const fullUrl = new URL(item.path, window.location.href).href;
+
+                        navigator.clipboard.writeText(fullUrl).then(() => {
+                            const originalHTML = actionBtn.innerHTML;
+                            actionBtn.innerHTML = '✅';
+                            setTimeout(() => {
+                                actionBtn.innerHTML = originalHTML;
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Erreur lors de la copie :', err);
+                        });
+                    });
+                }
+
+                itemContainer.appendChild(actionBtn);
+                li.appendChild(itemContainer);
                 container.appendChild(li);
             }
         });
