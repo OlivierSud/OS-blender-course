@@ -314,6 +314,37 @@ document.addEventListener('DOMContentLoaded', () => {
         queueRenderPage(pageNum);
     });
 
+    // Fullscreen behavior for mobile
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', () => {
+            const container = document.getElementById('mobile-pdf-container');
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        });
+
+        // Update icon based on state (optional but nice)
+        document.addEventListener('fullscreenchange', () => {
+            fullscreenBtn.innerHTML = document.fullscreenElement ? '❐' : '⛶';
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            fullscreenBtn.innerHTML = document.webkitFullscreenElement ? '❐' : '⛶';
+        });
+    }
+
     // Initialize Menu - Wait for Login
     document.addEventListener('login-success', () => {
         if (window.COURSE_DATA) {

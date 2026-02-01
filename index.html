@@ -82,9 +82,12 @@
         <!-- Mobile-Specific PDF.js Viewer -->
         <div id="mobile-pdf-container" style="display: none;">
             <div id="mobile-viewer-controls">
-                <button id="prev-page">Page Précédente</button>
-                <span id="page-info">Page <span id="page-num">0</span> / <span id="page-count">0</span></span>
-                <button id="next-page">Page Suivante</button>
+                <button id="prev-page">Précédent</button>
+                <div class="mobile-center-controls">
+                    <button id="fullscreen-btn" title="Plein écran">⛶</button>
+                    <span id="page-info">Page <span id="page-num">0</span> / <span id="page-count">0</span></span>
+                </div>
+                <button id="next-page">Suivant</button>
             </div>
             <div id="pdf-canvas-wrapper">
                 <div id="pdf-loader" class="pdf-loader" style="display: none;">
