@@ -21,19 +21,19 @@ window.COURSE_DATA = {
                         "type": "file",
                         "name": "Cours 2 -mod\u00e9lisation.pdf",
                         "path": "Cours/2025/3D1/Cours 2 -mod\u00e9lisation.pdf",
-                        "visibility": true
+                        "visibility": false
                     },
                     {
                         "type": "file",
                         "name": "Cours 4 - Carte de voeux.pdf",
                         "path": "Cours/2025/3D1/Cours 4 - Carte de voeux.pdf",
-                        "visibility": true
+                        "visibility": false
                     },
                     {
                         "type": "file",
                         "name": "Cours 5 - Personnage-1.pdf",
                         "path": "Cours/2025/3D1/Cours 5 - Personnage-1.pdf",
-                        "visibility": true
+                        "visibility": false
                     }
                 ],
                 "visibility": true
