@@ -22,12 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to render the menu recursively
-    function renderMenu(items, container) {
+    function renderMenu(items, container, isProf = false) {
         if (!items || items.length === 0) return;
 
         items.forEach(item => {
             // Check visibility (explicitly false means hidden, default true)
-            if (item.visibility === false) return;
+            // PROF MODE: Ignore visibility and show everything
+            if (item.visibility === false && !isProf) return;
 
             const li = document.createElement('li');
             li.classList.add('course-item');
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.appendChild(li);
 
                 // Recursively render children
-                renderMenu(item.children, submenu);
+                renderMenu(item.children, submenu, isProf);
 
             } else if (item.type === 'file') {
                 // File link logic wrapper
@@ -427,13 +428,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Initialize Course Menu
             courseListContainer.innerHTML = '';
-            renderMenu(courseData, courseListContainer);
+            renderMenu(courseData, courseListContainer, groupName === 'Prof');
 
             // Initialize Tips Menu
             const tipsListContainer = document.getElementById('tips-list');
             if (window.COURSE_DATA.tips && tipsListContainer) {
                 tipsListContainer.innerHTML = '';
-                renderMenu(window.COURSE_DATA.tips, tipsListContainer);
+                renderMenu(window.COURSE_DATA.tips, tipsListContainer, groupName === 'Prof');
             }
 
             // Apply global listener and override renderMenu's inline logic if needed

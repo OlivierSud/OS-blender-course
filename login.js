@@ -12,10 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Password configuration for each class
     const CLASS_PASSWORDS = {
-        '3D1': '3D1',
-        '3D2': '3D2',
-        'DA3': 'DA3',
-        'Prof': 'Prof'
+        '3D1': 'aqwse',
+        '3D2': 'zsxdr',
+        'DA3': 'edcft',
+        'Prof': 'prof01'
     };
 
     let selectedClass = null;
