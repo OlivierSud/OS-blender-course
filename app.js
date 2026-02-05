@@ -484,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const years = Object.keys(rawCourses).sort((a, b) => b - a); // Newest first
                         courseData = years.map(year => ({
                             type: 'folder',
-                            name: `Année ${year}`,
+                            name: `Année ${year}-${parseInt(year) + 1}`,
                             children: rawCourses[year],
                             visibility: true
                         }));
@@ -497,8 +497,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const sortedYears = Object.keys(rawCourses).sort((a, b) => b - a);
                         if (sortedYears.length > 0) {
                             const latestYear = sortedYears[0];
+                            const academicYear = `${latestYear}-${parseInt(latestYear) + 1}`;
                             const brandSubtitle = document.querySelector('.brand-subtitle');
-                            if (brandSubtitle) brandSubtitle.textContent = `Cours ${groupName} - ${latestYear}`;
+                            if (brandSubtitle) brandSubtitle.textContent = `Cours ${groupName} - ${academicYear}`;
 
                             const groupFolder = rawCourses[latestYear].find(item => item.name === groupName && item.type === 'folder');
                             if (groupFolder) {
