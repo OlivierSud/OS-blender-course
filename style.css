@@ -438,6 +438,22 @@ iframe {
     margin-top: 1.5rem;
 }
 
+.loading-data {
+    grid-column: 1 / -1;
+    margin-bottom: 1rem !important;
+}
+
+.login-spinner {
+    grid-column: 1 / -1;
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
 .class-button {
     padding: 1.2rem 1rem;
     background: rgba(255, 116, 23, 0.1);
