@@ -24,7 +24,7 @@
 
             <!-- Class selection buttons (initially visible) -->
             <div id="class-selection">
-                <!-- Buttons will be dynamically generated from courses_data.js -->
+                <p class="loading-data">Chargement des classes depuis Google Drive...</p>
             </div>
 
             <!-- Password input (initially hidden) -->
@@ -103,13 +103,19 @@
                 <canvas id="pdf-canvas"></canvas>
             </div>
         </div>
+
+        <div id="global-loader" class="loader-overlay" style="display:none;">
+            <div class="loader-content">
+                <div class="spinner"></div>
+                <p>Chargement du document...</p>
+            </div>
+        </div>
     </main>
 
     <button id="sidebar-open" class="sidebar-toggle-open">▶</button>
 
-    <script>
-        document.write('<script src="courses_data.js?v=' + Date.now() + '"><\/script>');
-    </script>
+    <script src="googleDrive.js"></script>
+    <script src="tips_data.js"></script>
     <script src="app.js"></script>
     <script src="login.js"></script>
 </body>

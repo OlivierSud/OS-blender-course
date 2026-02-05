@@ -86,12 +86,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const actionBtn = document.createElement('a');
                 actionBtn.classList.add('course-action-btn');
 
-                const isPDF = item.path.toLowerCase().endsWith('.pdf');
+                // Improved PDF detection: check path extension OR filename
+                const isPDF = item.path.toLowerCase().endsWith('.pdf') ||
+                    item.name.toLowerCase().endsWith('.pdf') ||
+                    (item.downloadUrl && item.downloadUrl.includes('pdf'));
 
                 if (isPDF) {
                     actionBtn.innerHTML = '⤓';
                     actionBtn.title = 'Télécharger le PDF';
-                    actionBtn.href = item.path; // Set default href for right-click/fallback
+
+                    const downloadUrl = item.downloadUrl || item.path;
+                    actionBtn.href = downloadUrl; // Set default href for right-click/fallback
 
                     actionBtn.addEventListener('click', async (e) => {
                         e.preventDefault();
@@ -101,8 +106,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         actionBtn.style.pointerEvents = 'none';
                         const startTime = Date.now();
 
+                        // If it's a dynamic Drive link, just open it in a new tab to trigger download
+                        if (item.downloadUrl) {
+                            window.open(item.downloadUrl, '_blank');
+
+                            // Visual feedback
+                            setTimeout(() => {
+                                itemContainer.classList.remove('loading');
+                                itemContainer.classList.add('success');
+                                setTimeout(() => {
+                                    itemContainer.classList.remove('success');
+                                    actionBtn.style.pointerEvents = 'auto';
+                                }, 2000);
+                            }, 600);
+                            return;
+                        }
+
+                        // Local file logic: force download via fetch (existing logic)
                         try {
-                            const response = await fetch(item.path);
+                            // Properly encode path for fetch
+                            const encodedPath = item.path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+                            const fetchUrl = new URL(encodedPath, window.location.href).href;
+
+                            const response = await fetch(fetchUrl);
                             if (!response.ok) throw new Error('Network response was not ok');
 
                             const blob = await response.blob();
@@ -241,27 +267,111 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function loadPDFMobile(path) {
+    // Global Loader Utilities
+    const globalLoader = document.getElementById('global-loader');
+    const showGlobalLoader = (message = 'Chargement du document...') => {
+        if (globalLoader) {
+            globalLoader.querySelector('p').textContent = message;
+            globalLoader.style.display = 'flex';
+        }
+    };
+    const hideGlobalLoader = () => {
+        if (globalLoader) globalLoader.style.display = 'none';
+    };
+
+    async function loadPDFViewer(path, fileName) {
+        showGlobalLoader();
         emptyState.style.display = 'none';
         pdfContainer.style.display = 'none';
         const mobileContainer = document.getElementById('mobile-pdf-container');
         mobileContainer.style.display = 'flex';
 
         const loader = document.getElementById('pdf-loader');
-        if (loader) loader.style.display = 'flex';
+        if (loader) {
+            loader.style.display = 'flex';
+            loader.querySelector('p').textContent = 'Initialisation...';
+        }
         canvas.style.opacity = '0'; // Hide canvas during initial fetch
 
-        try {
-            const loadingTask = pdfjsLib.getDocument(path);
-            pdfDoc = await loadingTask.promise;
-            document.getElementById('page-count').textContent = pdfDoc.numPages;
+        let finalPath = path;
+        let fetchUrl = path;
 
-            pageNum = 1;
-            await renderPage(pageNum);
+        try {
+            console.log("Mobile Viewer: Preparing document:", path);
+
+            if (path.includes('drive.google.com')) {
+                const fileId = path.split('/d/')[1].split('/')[0];
+                const apiKey = window.DRIVE_CONFIG ? window.DRIVE_CONFIG.apiKey : '';
+                fetchUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
+            } else {
+                // Get the absolute path to the directory containing index.html
+                const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+
+                // Robust encoding: split by / and encode each segment individually
+                // e.g. "Tips/File 1.pdf" -> "Tips/File%201.pdf"
+                const segments = path.split('/');
+                const encodedSegments = segments.map(s => encodeURIComponent(s));
+                const encodedPath = encodedSegments.join('/');
+
+                // Construct the absolute URL
+                fetchUrl = new URL(encodedPath, baseUrl).href;
+
+                console.log("Diagnostic - Original path:", path);
+                console.log("Diagnostic - Base URL:", baseUrl);
+                console.log("Diagnostic - Encoded path:", encodedPath);
+                console.log("Diagnostic - Final Fetch URL:", fetchUrl);
+            }
+
+            finalPath = fetchUrl; // Default to the encoded URL
+            console.log("Mobile Viewer: Attempting to load from:", finalPath);
+
+            // SPECIAL HANDLING FOR file:// PROTOCOL
+            // Browsers block 'fetch' on file://, but PDF.js might still be able to load the direct path
+            if (window.location.protocol !== 'file:') {
+                try {
+                    const response = await fetch(fetchUrl);
+                    if (!response.ok) throw new Error(`Fetch status: ${response.status}`);
+                    const blob = await response.blob();
+
+                    if (window._currentMobilePdfBlob) URL.revokeObjectURL(window._currentMobilePdfBlob);
+                    finalPath = URL.createObjectURL(blob);
+                    window._currentMobilePdfBlob = finalPath;
+                } catch (fetchErr) {
+                    console.warn("Manual mobile blob fetch failed (likely CORS), falling back to direct URL.");
+                }
+            }
+
+            try {
+                const loadingTask = pdfjsLib.getDocument(finalPath);
+                pdfDoc = await loadingTask.promise;
+                document.getElementById('page-count').textContent = pdfDoc.numPages;
+
+                pageNum = 1;
+                await renderPage(pageNum);
+                hideGlobalLoader();
+            } catch (pdfJsErr) {
+                // If PDF.js fails to initialize (often due to CORS on file://)
+                // we silently fallback to the native iframe viewer.
+                console.warn("PDF.js could not initialize, switching to native viewer:", pdfJsErr);
+
+                hideGlobalLoader();
+                emptyState.style.display = 'none';
+                pdfContainer.style.display = 'block';
+                document.getElementById('mobile-pdf-container').style.display = 'none';
+
+                // Use the encoded URL for the native viewer
+                viewer.src = fetchUrl;
+            }
         } catch (error) {
-            console.error('Error loading PDF with PDF.js:', error);
+            console.error('Unexpected error in loadPDFViewer:', error);
             if (loader) loader.style.display = 'none';
-            alert('Erreur lors du chargement du PDF sur mobile.');
+            hideGlobalLoader();
+
+            // Emergency fallback
+            emptyState.style.display = 'none';
+            pdfContainer.style.display = 'block';
+            document.getElementById('mobile-pdf-container').style.display = 'none';
+            viewer.src = fetchUrl;
         }
     }
 
@@ -348,115 +458,188 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Menu - Wait for Login
     document.addEventListener('login-success', () => {
-        if (window.COURSE_DATA) {
-            console.log("Course Data Loaded. Generated at:", window.COURSE_DATA.generatedAt);
+        const renderApp = () => {
+            if (window.COURSE_DATA) {
+                console.log("Course Data Loaded. Source:", window.COURSE_DATA.isDrive ? "Google Drive" : "Local");
+                console.log("Generated at:", window.COURSE_DATA.generatedAt);
 
-            // Handle Data Structure (Object for years, or fallback Array for legacy)
-            let rawCourses = window.COURSE_DATA.courses || window.COURSE_DATA;
-            let courseData = [];
+                // Handle Data Structure (Object for years, or fallback Array for legacy)
+                let rawCourses = window.COURSE_DATA.courses || window.COURSE_DATA;
+                let courseData = [];
 
-            // Handle Group filtering - prioritize sessionStorage (from login), then URL parameters
-            let groupName = sessionStorage.getItem('selectedGroup');
-            if (!groupName) {
-                const urlParams = new URLSearchParams(window.location.search);
-                groupName = urlParams.get('group');
-            }
-
-            if (groupName === 'Prof') {
-                // PROF MODE: Show everything, grouped by year folders
-                const brandSubtitle = document.querySelector('.brand-subtitle');
-                if (brandSubtitle) brandSubtitle.textContent = 'Mode Professeur - Archives Complètes';
-
-                if (typeof rawCourses === 'object' && !Array.isArray(rawCourses)) {
-                    // Convert years object to folder structure
-                    const years = Object.keys(rawCourses).sort((a, b) => b - a); // Newest first
-                    courseData = years.map(year => ({
-                        type: 'folder',
-                        name: `Année ${year}`,
-                        children: rawCourses[year],
-                        visibility: true
-                    }));
-                } else {
-                    courseData = rawCourses; // Legacy fallback
+                // Handle Group filtering - prioritize sessionStorage (from login), then URL parameters
+                let groupName = sessionStorage.getItem('selectedGroup');
+                if (!groupName) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    groupName = urlParams.get('group');
                 }
-            } else if (groupName) {
-                // STUDENT MODE: Show only latest year for specific class
-                if (typeof rawCourses === 'object' && !Array.isArray(rawCourses)) {
-                    const sortedYears = Object.keys(rawCourses).sort((a, b) => b - a);
-                    if (sortedYears.length > 0) {
-                        const latestYear = sortedYears[0];
-                        const brandSubtitle = document.querySelector('.brand-subtitle');
-                        if (brandSubtitle) brandSubtitle.textContent = `Cours ${groupName} - ${latestYear}`;
 
-                        const groupFolder = rawCourses[latestYear].find(item => item.name === groupName && item.type === 'folder');
-                        if (groupFolder) {
-                            courseData = groupFolder.children;
-                        } else {
-                            console.warn(`Classe "${groupName}" non trouvée en ${latestYear}`);
+                if (groupName === 'Prof') {
+                    // PROF MODE: Show everything, grouped by year folders
+                    const brandSubtitle = document.querySelector('.brand-subtitle');
+                    if (brandSubtitle) brandSubtitle.textContent = 'Mode Professeur - Archives Complètes';
+
+                    if (typeof rawCourses === 'object' && !Array.isArray(rawCourses)) {
+                        // Convert years object to folder structure
+                        const years = Object.keys(rawCourses).sort((a, b) => b - a); // Newest first
+                        courseData = years.map(year => ({
+                            type: 'folder',
+                            name: `Année ${year}`,
+                            children: rawCourses[year],
+                            visibility: true
+                        }));
+                    } else {
+                        courseData = rawCourses; // Legacy fallback
+                    }
+                } else if (groupName) {
+                    // STUDENT MODE: Show only latest year for specific class
+                    if (typeof rawCourses === 'object' && !Array.isArray(rawCourses)) {
+                        const sortedYears = Object.keys(rawCourses).sort((a, b) => b - a);
+                        if (sortedYears.length > 0) {
+                            const latestYear = sortedYears[0];
+                            const brandSubtitle = document.querySelector('.brand-subtitle');
+                            if (brandSubtitle) brandSubtitle.textContent = `Cours ${groupName} - ${latestYear}`;
+
+                            const groupFolder = rawCourses[latestYear].find(item => item.name === groupName && item.type === 'folder');
+                            if (groupFolder) {
+                                courseData = groupFolder.children;
+                            } else {
+                                console.warn(`Classe "${groupName}" non trouvée en ${latestYear}`);
+                            }
                         }
+                    } else {
+                        // Legacy fallback filtering
+                        const groupFolder = rawCourses.find(item => item.name === groupName && item.type === 'folder');
+                        if (groupFolder) courseData = groupFolder.children;
                     }
                 } else {
-                    // Legacy fallback filtering
-                    const groupFolder = rawCourses.find(item => item.name === groupName && item.type === 'folder');
-                    if (groupFolder) courseData = groupFolder.children;
+                    courseData = Array.isArray(rawCourses) ? rawCourses : [];
+                }
+
+                // Centralized click handling
+                const handleLinkClick = (link, e) => {
+                    const filePath = link.getAttribute('data-src');
+                    const fileName = link.textContent.trim();
+                    if (!filePath) return;
+
+                    // Visual active state handling
+                    document.querySelectorAll('.course-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+
+                    // Detection logic for PDF (Local or Drive Preview)
+                    const isPDF = filePath.toLowerCase().includes('.pdf') || filePath.includes('/preview');
+
+                    // Load content
+                    if (isMobile() && isPDF) {
+                        // Use PDF.js (Mobile Viewer) ONLY on Mobile
+                        // This provides the "one page at a time" experience requested
+                        loadPDFViewer(filePath, fileName);
+                    } else if (isPDF && filePath.includes('drive.google.com')) {
+                        // DESKTOP DRIVE PDF: Use Blob URL to get Native Browser Viewer
+                        // (This makes it look exactly like local Tips PDFs)
+
+                        // Show loading state in main content
+                        showGlobalLoader();
+                        emptyState.style.display = 'none';
+                        pdfContainer.style.display = 'block';
+                        document.getElementById('mobile-pdf-container').style.display = 'none';
+
+                        // Optional: Show a subtle loading overlay in the iframe area
+                        viewer.src = 'about:blank'; // Clear previous content
+
+                        const fileId = filePath.split('/d/')[1].split('/')[0];
+                        const apiKey = window.DRIVE_CONFIG ? window.DRIVE_CONFIG.apiKey : '';
+                        const mediaUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
+
+                        console.log("Fetching Drive PDF for Native View:", fileId);
+
+                        fetch(mediaUrl)
+                            .then(response => {
+                                if (!response.ok) throw new Error('Fetch failed');
+                                return response.blob();
+                            })
+                            .then(blob => {
+                                // Revoke previous blob if any to save memory
+                                if (window._currentPdfBlob) URL.revokeObjectURL(window._currentPdfBlob);
+
+                                const blobUrl = URL.createObjectURL(blob);
+                                window._currentPdfBlob = blobUrl;
+                                viewer.src = blobUrl;
+                                hideGlobalLoader();
+                            })
+                            .catch(err => {
+                                console.error("Native View Fail, falling back to Preview:", err);
+                                viewer.src = filePath; // Fallback to standard preview if fetch fails
+                                hideGlobalLoader();
+                            });
+                    } else {
+                        // Use standard iframe for Desktop Local Files
+                        if (isPDF) showGlobalLoader();
+                        viewer.src = filePath;
+                        emptyState.style.display = 'none';
+                        pdfContainer.style.display = 'block';
+                        document.getElementById('mobile-pdf-container').style.display = 'none';
+
+                        if (isPDF) {
+                            const onIframeLoad = () => {
+                                hideGlobalLoader();
+                                viewer.removeEventListener('load', onIframeLoad);
+                            };
+                            viewer.addEventListener('load', onIframeLoad);
+                            setTimeout(hideGlobalLoader, 2000);
+                        }
+                    }
+                };
+
+                // Initialize Course Menu
+                courseListContainer.innerHTML = '';
+                renderMenu(courseData, courseListContainer, groupName === 'Prof');
+
+                // Initialize Tips Menu
+                const tipsListContainer = document.getElementById('tips-list');
+                const tipsData = window.LOCAL_TIPS_DATA || [];
+                if (tipsData && tipsListContainer) {
+                    tipsListContainer.innerHTML = '';
+                    renderMenu(tipsData, tipsListContainer, groupName === 'Prof');
+                }
+
+                // Apply global listener
+                document.querySelectorAll('.course-link').forEach(link => {
+                    const newLink = link.cloneNode(true);
+                    link.parentNode.replaceChild(newLink, link);
+
+                    newLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleLinkClick(newLink, e);
+                    });
+                });
+
+                // Show switch class button
+                const switchClassBtn = document.getElementById('switch-class-btn');
+                if (switchClassBtn) {
+                    switchClassBtn.style.display = 'block';
                 }
             } else {
-                courseData = Array.isArray(rawCourses) ? rawCourses : [];
+                courseListContainer.innerHTML = '<li style="padding:1rem; color:red;">Erreur: Données introuvables.</li>';
             }
+        };
 
-            // Centralized click handling
-            const handleLinkClick = (link, e) => {
-                const pdfPath = link.getAttribute('data-src');
-                if (!pdfPath) return;
-
-                // Visual active state handling
-                document.querySelectorAll('.course-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-
-                // Load content
-                if (isMobile() && pdfPath.toLowerCase().endsWith('.pdf')) {
-                    // Use PDF.js for mobile PDFs
-                    loadPDFMobile(pdfPath);
-                } else {
-                    // Use standard iframe for everything else (desktop, or mobile non-PDF)
-                    viewer.src = pdfPath;
-                    emptyState.style.display = 'none';
-                    pdfContainer.style.display = 'block';
-                    document.getElementById('mobile-pdf-container').style.display = 'none';
-                }
-            };
-
-            // Initialize Course Menu
-            courseListContainer.innerHTML = '';
-            renderMenu(courseData, courseListContainer, groupName === 'Prof');
-
-            // Initialize Tips Menu
-            const tipsListContainer = document.getElementById('tips-list');
-            if (window.COURSE_DATA.tips && tipsListContainer) {
-                tipsListContainer.innerHTML = '';
-                renderMenu(window.COURSE_DATA.tips, tipsListContainer, groupName === 'Prof');
-            }
-
-            // Apply global listener and override renderMenu's inline logic if needed
-            // Actually, let's just use the shared logic for all .course-link
-            document.querySelectorAll('.course-link').forEach(link => {
-                // Remove the one added in renderMenu and use our new one
-                const newLink = link.cloneNode(true);
-                link.parentNode.replaceChild(newLink, link);
-
-                newLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    handleLinkClick(newLink, e);
-                });
-            });
-
-            // Show switch class button
-            const switchClassBtn = document.getElementById('switch-class-btn');
-            if (switchClassBtn) {
-                switchClassBtn.style.display = 'block';
-            }
+        if (window.COURSE_DATA) {
+            renderApp();
         } else {
-            courseListContainer.innerHTML = '<li style="padding:1rem; color:red;">Erreur: Données introuvables. Lancez scan_courses.py</li>';
+            // Wait for data if not yet loaded (async drive fetch)
+            document.addEventListener('data-ready', renderApp);
+
+            // Handle error in the sidebar too
+            document.addEventListener('data-error', (e) => {
+                courseListContainer.innerHTML = `
+                    <li style="padding:1rem; color:#ff4d4d; font-size: 0.9rem;">
+                        <strong>Erreur de chargement</strong><br>
+                        ${e.detail || 'Vérifiez la console (F12) pour plus de détails.'}
+                    </li>
+                `;
+            });
         }
     });
 });
+
