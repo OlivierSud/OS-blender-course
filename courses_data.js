@@ -14,5 +14,5 @@ window.COURSE_DATA = {
             "visibility": true
         }
     ],
-    "generatedAt": "2026-02-04 17:29:41"
+    "generatedAt": "2026-02-17 17:47:07"
 };

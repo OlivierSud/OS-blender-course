@@ -596,9 +596,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 courseListContainer.innerHTML = '';
                 renderMenu(courseData, courseListContainer, groupName === 'Prof');
 
-                // Initialize Tips Menu
+                // Initialize Tips Menu (from Drive first, fallback to local)
                 const tipsListContainer = document.getElementById('tips-list');
-                const tipsData = window.LOCAL_TIPS_DATA || [];
+                const tipsData = (window.COURSE_DATA && window.COURSE_DATA.tips && window.COURSE_DATA.tips.length > 0)
+                    ? window.COURSE_DATA.tips
+                    : (window.LOCAL_TIPS_DATA || []);
+                console.log(`Tips source: ${(window.COURSE_DATA && window.COURSE_DATA.tips && window.COURSE_DATA.tips.length > 0) ? 'Google Drive' : 'Local'} (${tipsData.length} items)`);
                 if (tipsData && tipsListContainer) {
                     tipsListContainer.innerHTML = '';
                     renderMenu(tipsData, tipsListContainer, groupName === 'Prof');

@@ -112,7 +112,51 @@ async function fetchGoogleDriveData() {
                         }
                     }
                 }
-                // Skip Tips from Drive as per user request (reverted to local repo)
+
+                // Load Tips from Drive
+                if (nameLower === 'tips') {
+                    console.log(`Found 'Tips' folder in Drive. Loading tips...`);
+                    const tipItems = await getFolderContents(item.id);
+
+                    // Sort: folders first, then files, alphabetically
+                    tipItems.sort((a, b) => {
+                        const isAFolder = a.mimeType === 'application/vnd.google-apps.folder';
+                        const isBFolder = b.mimeType === 'application/vnd.google-apps.folder';
+                        if (isAFolder && !isBFolder) return -1;
+                        if (!isAFolder && isBFolder) return 1;
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    for (const tipItem of tipItems) {
+                        if (tipItem.mimeType === 'application/pdf') {
+                            // Direct PDF tip
+                            finalData.tips.push({
+                                type: 'file',
+                                name: tipItem.name.replace(/\.pdf$/i, ''),
+                                id: tipItem.id,
+                                path: `https://drive.google.com/file/d/${tipItem.id}/preview`,
+                                downloadUrl: `https://drive.google.com/uc?export=download&id=${tipItem.id}`,
+                                visibility: true
+                            });
+                        } else if (tipItem.mimeType === 'application/vnd.google-apps.folder') {
+                            // Folder tip: look for index.html inside
+                            const folderContents = await getFolderContents(tipItem.id);
+                            const htmlFile = folderContents.find(f => f.name.toLowerCase() === 'index.html');
+                            if (htmlFile) {
+                                finalData.tips.push({
+                                    type: 'file',
+                                    name: tipItem.name,
+                                    id: htmlFile.id,
+                                    path: `https://drive.google.com/file/d/${htmlFile.id}/preview`,
+                                    visibility: true
+                                });
+                            } else {
+                                console.warn(`Tips folder '${tipItem.name}' has no index.html, skipping.`);
+                            }
+                        }
+                    }
+                    console.log(`Loaded ${finalData.tips.length} tips from Drive.`);
+                }
             }
         }
 
