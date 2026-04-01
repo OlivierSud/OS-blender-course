@@ -4,12 +4,6 @@ const TIPS_DATA = [
         "name": "Raccourcis clavier",
         "path": "Tips/Raccourcis clavier/index.html",
         "visibility": true
-    },
-    {
-        "type": "file",
-        "name": "test",
-        "path": "Tips/test.html",
-        "visibility": true
     }
 ];
 
