@@ -7,8 +7,8 @@ const TIPS_DATA = [
     },
     {
         "type": "file",
-        "name": "Interface et base de modélisation",
-        "path": "Tips/Interface et base de modélisation.pdf",
+        "name": "test",
+        "path": "Tips/test.html",
         "visibility": true
     }
 ];

@@ -18,6 +18,10 @@ if %errorlevel% neq 0 (
 echo [+] Ouverture du navigateur vers http://localhost:8000
 start "" "http://localhost:8000"
 
+:: Update data files
+echo [+] Mise a jour des fichiers de donnees (cours et tips)...
+python scan_courses.py
+
 :: Start the server
 echo [+] Lancement du serveur sur le port 8000...
 echo [!] Gardez cette fenetre ouverte tant que vous travaillez.

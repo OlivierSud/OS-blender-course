@@ -139,20 +139,9 @@ async function fetchGoogleDriveData() {
                                 visibility: true
                             });
                         } else if (tipItem.mimeType === 'application/vnd.google-apps.folder') {
-                            // Folder tip: look for index.html inside
-                            const folderContents = await getFolderContents(tipItem.id);
-                            const htmlFile = folderContents.find(f => f.name.toLowerCase() === 'index.html');
-                            if (htmlFile) {
-                                finalData.tips.push({
-                                    type: 'file',
-                                    name: tipItem.name,
-                                    id: htmlFile.id,
-                                    path: `https://drive.google.com/file/d/${htmlFile.id}/preview`,
-                                    visibility: true
-                                });
-                            } else {
-                                console.warn(`Tips folder '${tipItem.name}' has no index.html, skipping.`);
-                            }
+                            // On ignore les dossiers sur Drive car les fichiers HTML 
+                            // nécessitent leurs ressources locales (images, css, etc.)
+                            console.log(`Tips folder '${tipItem.name}' ignored on Drive. Les dossiers de tips doivent être utilisés en local.`);
                         }
                     }
                     console.log(`Loaded ${finalData.tips.length} tips from Drive.`);

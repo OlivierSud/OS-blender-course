@@ -576,7 +576,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         // Use standard iframe for Desktop Local Files
                         if (isPDF) showGlobalLoader();
-                        viewer.src = filePath;
+                        
+                        // Robust encoding for local paths (similar to loadPDFViewer)
+                        let encodedPath = filePath;
+                        if (!filePath.startsWith('http')) {
+                            // Split by '/' and encode each segment properly
+                            const segments = filePath.split('/');
+                            encodedPath = segments.map(s => encodeURIComponent(s)).join('/');
+                        }
+                        
+                        viewer.src = encodedPath;
                         emptyState.style.display = 'none';
                         pdfContainer.style.display = 'block';
                         document.getElementById('mobile-pdf-container').style.display = 'none';
@@ -596,13 +605,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 courseListContainer.innerHTML = '';
                 renderMenu(courseData, courseListContainer, groupName === 'Prof');
 
-                // Initialize Tips Menu (from Drive first, fallback to local)
+                // Initialize Tips Menu (Combine Drive PDFs and Local Folders)
                 const tipsListContainer = document.getElementById('tips-list');
-                const tipsData = (window.COURSE_DATA && window.COURSE_DATA.tips && window.COURSE_DATA.tips.length > 0)
-                    ? window.COURSE_DATA.tips
-                    : (window.LOCAL_TIPS_DATA || []);
-                console.log(`Tips source: ${(window.COURSE_DATA && window.COURSE_DATA.tips && window.COURSE_DATA.tips.length > 0) ? 'Google Drive' : 'Local'} (${tipsData.length} items)`);
-                if (tipsData && tipsListContainer) {
+                const driveTips = (window.COURSE_DATA && window.COURSE_DATA.tips) ? window.COURSE_DATA.tips : [];
+                const localTips = window.LOCAL_TIPS_DATA || [];
+                
+                // Keep all local tips EXCEPT standalone .pdf files (which are from Drive)
+                // This keeps folders (type='folder') and HTML files (type='file' with .html path)
+                const localFoldersAndHtml = localTips.filter(tip => tip.type === 'folder' || (tip.path && tip.path.endsWith('.html')));
+                const tipsData = [...driveTips, ...localFoldersAndHtml];
+                
+                console.log(`Tips merged: Drive PDFs (${driveTips.length}) + Local Folders/HTML (${localFoldersAndHtml.length})`);
+                if (tipsData.length > 0 && tipsListContainer) {
                     tipsListContainer.innerHTML = '';
                     renderMenu(tipsData, tipsListContainer, groupName === 'Prof');
                 }
@@ -615,6 +629,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     newLink.addEventListener('click', (e) => {
                         e.preventDefault();
                         handleLinkClick(newLink, e);
+                        
+                        // Close sidebar on mobile
+                        if (window.innerWidth <= 768) {
+                            const sidebar = document.getElementById('sidebar');
+                            const sidebarOpenBtn = document.getElementById('sidebar-open');
+                            if (sidebar && sidebarOpenBtn) {
+                                sidebar.classList.add('closed');
+                                sidebarOpenBtn.classList.add('visible');
+                            }
+                        }
                     });
                 });
 

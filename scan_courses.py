@@ -11,7 +11,7 @@ COURSES_OUTPUT = 'courses_data.js'
 TIPS_OUTPUT = 'tips_data.js'
 LOGIN_FILE = 'login.js'
 DRIVE_CONFIG_FILE = 'googleDrive.js'
-ALLOWED_EXTENSIONS = {'.pdf'}
+ALLOWED_EXTENSIONS = {'.pdf', '.html'}
 
 def load_existing_visibility(filepath):
     """
@@ -55,7 +55,7 @@ def load_existing_visibility(filepath):
         
     return visibility_map
 
-def scan_directory(path, visibility_map):
+def scan_directory(path, visibility_map, allowed_extensions=ALLOWED_EXTENSIONS):
     """
     Recursively scans a directory and returns a structured list of items.
     """
@@ -71,19 +71,15 @@ def scan_directory(path, visibility_map):
             full_path = os.path.join(path, entry)
             
             if os.path.isdir(full_path):
-                index_path = os.path.join(full_path, 'index.html')
-                if os.path.exists(index_path):
-                    rel_path = index_path.replace('\\', '/')
-                    is_visible = visibility_map.get(rel_path, visibility_map.get(entry, True))
-                    items.append({
-                        "type": "file",
-                        "name": entry,
-                        "path": rel_path,
-                        "visibility": is_visible
-                    })
-                else:
-                    children = scan_directory(full_path, visibility_map)
-                    if children:
+                # Search recursively for resources in subfolders
+                children = scan_directory(full_path, visibility_map, allowed_extensions)
+                
+                if children:
+                    # If the folder contains only 'index.html', flatten it so it appears as a single clickable item
+                    if len(children) == 1 and children[0]["name"].lower() == "index":
+                        children[0]["name"] = entry
+                        items.append(children[0])
+                    else:
                         is_visible = visibility_map.get(entry, True)
                         items.append({
                             "type": "folder",
@@ -93,12 +89,20 @@ def scan_directory(path, visibility_map):
                         })
             else:
                 _, ext = os.path.splitext(entry)
-                if ext.lower() in ALLOWED_EXTENSIONS:
+                if ext.lower() in allowed_extensions:
                     rel_path = full_path.replace('\\', '/')
                     is_visible = visibility_map.get(rel_path, visibility_map.get(entry, True))
+                    
+                    # Remove the known extension for the display name
+                    name_without_ext = entry
+                    for allowed_ext in allowed_extensions:
+                        if name_without_ext.lower().endswith(allowed_ext):
+                            name_without_ext = name_without_ext[:-len(allowed_ext)]
+                            break
+                            
                     items.append({
                         "type": "file",
-                        "name": entry.replace('.pdf', ''),
+                        "name": name_without_ext,
                         "path": rel_path,
                         "visibility": is_visible
                     })
@@ -213,7 +217,7 @@ def update_files():
     # 1. Update tips_data.js
     print("Updating tips_data.js...")
     vis_tips = load_existing_visibility(TIPS_OUTPUT)
-    tips = scan_directory(TIPS_DIR, vis_tips)
+    tips = scan_directory(TIPS_DIR, vis_tips, allowed_extensions={'.html'})
     tips_js = f"const TIPS_DATA = {json.dumps(tips, indent=4, ensure_ascii=False)};\n\nwindow.LOCAL_TIPS_DATA = TIPS_DATA;"
     with open(TIPS_OUTPUT, 'w', encoding='utf-8') as f:
         f.write(tips_js)
@@ -228,9 +232,9 @@ def update_files():
         year_folders = [f for f in os.listdir(cours_dir) if os.path.isdir(os.path.join(cours_dir, f)) and re.match(r'^\d{4}$', f)]
         if year_folders:
             for y in sorted(year_folders, reverse=True):
-                courses_data["courses"][y] = scan_directory(os.path.join(cours_dir, y), vis_courses)
+                courses_data["courses"][y] = scan_directory(os.path.join(cours_dir, y), vis_courses, allowed_extensions=ALLOWED_EXTENSIONS)
         else:
-            courses_data["courses"] = scan_directory(cours_dir, vis_courses)
+            courses_data["courses"] = scan_directory(cours_dir, vis_courses, allowed_extensions=ALLOWED_EXTENSIONS)
     
     courses_js = f"window.COURSE_DATA = {json.dumps(courses_data, indent=4, ensure_ascii=False)};"
     with open(COURSES_OUTPUT, 'w', encoding='utf-8') as f:

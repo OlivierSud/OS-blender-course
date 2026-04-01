@@ -9,10 +9,10 @@ window.COURSE_DATA = {
         },
         {
             "type": "file",
-            "name": "Interface et base de modélisation",
-            "path": "Tips/Interface et base de modélisation.pdf",
+            "name": "test",
+            "path": "Tips/test.html",
             "visibility": true
         }
     ],
-    "generatedAt": "2026-02-17 17:47:07"
+    "generatedAt": "2026-04-01 17:43:03"
 };
